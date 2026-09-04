@@ -2,7 +2,12 @@ services:
   - type: web
     name: iubat-student-service-shakkhor
     runtime: docker
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /
+    autoDeploy: false
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
