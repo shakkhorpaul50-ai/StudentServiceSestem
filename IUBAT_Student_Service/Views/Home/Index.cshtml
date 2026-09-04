@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- IUBAT Hero with real campus image -->
+<section class="hero-section position-relative overflow-hidden" style="background:#fff; padding:0; border-left:4px solid #b1040e;">
+    <div class="row g-0 align-items-stretch">
+        <div class="col-lg-7 p-4 p-lg-5 d-flex flex-column justify-content-center">
+            <span class="hero-badge">IUBAT — International University of Business Agriculture and Technology • Since 1991</span>
+            <h1>Campus <span class="accent">Service</span><br>Portal</h1>
+            <p class="lead mb-4">
+                Raise, follow and resolve your ID card, transcript and certificate requests
+                — streamlined, transparent and always available. Built for IUBAT students and staff.
+            </p>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <div class="d-flex gap-3 flex-wrap">
+                    @if (User.IsInRole("Student"))
+                    {
+                        <a asp-controller="Student" asp-action="Create" class="btn btn-primary-custom btn-lg">
+                            + New Service Request
+                        </a>
+                        <a asp-controller="Student" asp-action="MyRequests" class="btn btn-outline-custom btn-lg">
+                            My Requests
+                        </a>
+                    }
+                    else if (User.IsInRole("Staff"))
+                    {
+                        <a asp-controller="Staff" asp-action="AllRequests" class="btn btn-primary-custom btn-lg">
+                            Manage Requests
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="d-flex gap-3 flex-wrap">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary-custom btn-lg">
+                        Sign In
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-custom btn-lg">
+                        Create Student Account
+                    </a>
+                </div>
+                <small class="text-muted mt-3" style="font-size:12px;">Staff demo: <code>s.paul@iubat.edu / $h@2kh0R</code> — Student: register new account</small>
+            }
+        </div>
+        <div class="col-lg-5 d-none d-lg-block position-relative" style="min-height:340px; background: url('/images/home-slider-iubat.jpg') center/cover no-repeat;">
+            <div style="position:absolute; inset:0; background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.0) 35%, rgba(8,44,102,0.08) 100%);"></div>
+            <div style="position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,0.62); color:#fff; font-size:11px; padding:4px 8px; border-radius:2px; letter-spacing:0.3px;">IUBAT Permanent Campus — Uttara, Dhaka</div>
+        </div>
+    </div>
+    <!-- Mobile campus banner -->
+    <div class="d-lg-none" style="height:180px; background: url('/images/home-slider-iubat.jpg') center/cover no-repeat; border-top:1px solid var(--sust-border);"></div>
+</section>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="feature-card h-100 text-center">
+            <img src="~/images/Iubat-logo.png" alt="IUBAT" style="height:48px; margin-bottom:12px;" />
+            <h5 class="fw-bold">Request Online</h5>
+            <p class="text-muted mb-0">File ID card replacements, transcript and certificate requests in under a minute.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="feature-card h-100 text-center">
+            <img src="~/images/cropped-IUBAT_30_years_glory-270x270.png" alt="IUBAT 30 Years" style="height:48px; margin-bottom:12px; border-radius:50%;" />
+            <h5 class="fw-bold">Live Tracking</h5>
+            <p class="text-muted mb-0">Follow every update — Pending → Processing → Completed or Rejected.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="feature-card h-100 text-center">
+            <img src="~/images/Iubat-Logo-with-name.png" alt="IUBAT" style="height:42px; margin-bottom:12px;" />
+            <h5 class="fw-bold">Staff-Only Control</h5>
+            <p class="text-muted mb-0">Only verified staff can view all requests and update status securely.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="detail-card h-100" style="border-left: 4px solid var(--sust-red);">
+            <div class="detail-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: var(--sust-navy);">Need help with a request?</h5>
+                    <p class="text-muted mb-0" style="font-size:0.92rem;">All requests are linked to your student account and visible only to you and authorized staff.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="status-badge status-pending">Pending</span>
+                    <span class="status-badge status-processing">Processing</span>
+                    <span class="status-badge status-completed">Completed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="detail-card h-100 p-0 overflow-hidden" style="border-left: 4px solid var(--sust-navy);">
+            <img src="~/images/qs-world-ranking-2025-iubat.jpg" alt="IUBAT QS Ranking" style="width:100%; height:140px; object-fit:cover;" />
+            <div class="p-3">
+                <h6 class="fw-bold mb-1" style="color:var(--sust-navy); font-size:0.9rem;">IUBAT in QS World Ranking 2025</h6>
+                <p class="text-muted mb-0" style="font-size:0.82rem;">Proudly ranked among global universities — see <a href="https://iubat.edu" target="_blank">iubat.edu</a> for latest achievements.</p>
+            </div>
+        </div>
+    </div>
+</div>
