@@ -15,6 +15,12 @@ namespace IUBAT_Student_Service.Models.ViewModels
         public string LastName { get; set; } = string.Empty;
 
         [Required]
+        [Display(Name = "Student ID")]
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "Student ID must be between 3 and 50 characters.")]
+        [RegularExpression(@"^[A-Za-z0-9\-]+$", ErrorMessage = "Student ID can only contain letters, numbers and hyphen.")]
+        public string StudentId { get; set; } = string.Empty;
+
+        [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;

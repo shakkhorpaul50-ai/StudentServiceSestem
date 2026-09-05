@@ -17,10 +17,33 @@ namespace IUBAT_Student_Service.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> AllRequests()
+        public async Task<IActionResult> AllRequests(string? searchId, string? searchTerm)
         {
-            var requests = await _context.ServiceRequests
+            // Support both param names: searchId (spec) and searchTerm (alias)
+            var query = (searchId ?? searchTerm)?.Trim();
+            ViewData["CurrentFilter"] = query;
+
+            var dbQuery = _context.ServiceRequests
                 .Include(r => r.Student)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var lowered = query.ToLower();
+                // Search by: Request ID exact, StudentId (unique), Student Email, Student Name
+                // Also handle numeric request id
+                bool isNumeric = int.TryParse(query, out var reqId);
+                dbQuery = dbQuery.Where(r =>
+                    (isNumeric && r.Id == reqId) ||
+                    (r.Student != null && r.Student.StudentId != null && r.Student.StudentId.ToLower().Contains(lowered)) ||
+                    (r.Student != null && r.Student.Email != null && r.Student.Email.ToLower().Contains(lowered)) ||
+                    (r.Student != null && (r.Student.FirstName + " " + r.Student.LastName).ToLower().Contains(lowered)) ||
+                    r.Description.ToLower().Contains(lowered) ||
+                    r.RequestType.ToString().ToLower().Contains(lowered)
+                );
+            }
+
+            var requests = await dbQuery
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
@@ -33,7 +56,8 @@ namespace IUBAT_Student_Service.Controllers
                 CreatedDate = r.CreatedDate,
                 UpdatedDate = r.UpdatedDate,
                 StudentName = r.Student?.FirstName + " " + r.Student?.LastName,
-                StudentEmail = r.Student?.Email ?? ""
+                StudentEmail = r.Student?.Email ?? "",
+                StudentIdNumber = r.Student?.StudentId ?? "—"
             }).ToList();
 
             return View(viewModels);
@@ -58,7 +82,8 @@ namespace IUBAT_Student_Service.Controllers
                 CreatedDate = request.CreatedDate,
                 UpdatedDate = request.UpdatedDate,
                 StudentName = request.Student?.FirstName + " " + request.Student?.LastName,
-                StudentEmail = request.Student?.Email ?? ""
+                StudentEmail = request.Student?.Email ?? "",
+                StudentIdNumber = request.Student?.StudentId ?? "—"
             };
 
             return View(viewModel);

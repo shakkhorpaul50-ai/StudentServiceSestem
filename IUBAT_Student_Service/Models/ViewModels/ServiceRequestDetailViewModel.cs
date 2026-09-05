@@ -26,5 +26,8 @@ namespace IUBAT_Student_Service.Models.ViewModels
 
         [Display(Name = "Student Email")]
         public string StudentEmail { get; set; } = string.Empty;
+
+        [Display(Name = "Student ID")]
+        public string? StudentIdNumber { get; set; }
     }
 }

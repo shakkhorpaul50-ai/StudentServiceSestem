@@ -28,6 +28,7 @@ namespace IUBAT_Student_Service.Controllers
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
+            var currentUser = await _userManager.GetUserAsync(User);
             var viewModels = requests.Select(r => new ServiceRequestDetailViewModel
             {
                 Id = r.Id,
@@ -36,8 +37,9 @@ namespace IUBAT_Student_Service.Controllers
                 Status = r.Status,
                 CreatedDate = r.CreatedDate,
                 UpdatedDate = r.UpdatedDate,
-                StudentName = "",
-                StudentEmail = ""
+                StudentName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : "",
+                StudentEmail = currentUser?.Email ?? "",
+                StudentIdNumber = currentUser?.StudentId ?? "—"
             }).ToList();
 
             return View(viewModels);
@@ -95,9 +97,65 @@ namespace IUBAT_Student_Service.Controllers
                 CreatedDate = request.CreatedDate,
                 UpdatedDate = request.UpdatedDate,
                 StudentName = request.Student?.FirstName + " " + request.Student?.LastName,
-                StudentEmail = request.Student?.Email ?? ""
+                StudentEmail = request.Student?.Email ?? "",
+                StudentIdNumber = request.Student?.StudentId ?? "—"
             };
 
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var studentId = _userManager.GetUserId(User);
+            var request = await _context.ServiceRequests
+                .FirstOrDefaultAsync(r => r.Id == id && r.StudentId == studentId);
+
+            if (request == null) return NotFound();
+
+            // Business rule: students can delete only their own pending requests.
+            // If you want to allow deleting any status, remove this check.
+            if (request.Status != RequestStatus.Pending)
+            {
+                TempData["Error"] = $"Request #{request.Id} cannot be deleted because it is {request.Status}. Only Pending requests can be deleted.";
+                return RedirectToAction(nameof(MyRequests));
+            }
+
+            _context.ServiceRequests.Remove(request);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Request #{id} deleted successfully.";
+            return RedirectToAction(nameof(MyRequests));
+        }
+
+        // Alternative: allow deleting any owned request regardless of status (uncomment to use)
+        // [HttpPost]
+        // [ValidateAntiForgeryToken]
+        // public async Task<IActionResult> DeleteAny(int id) { ... }
+
+        [HttpGet]
+        public async Task<IActionResult> DeleteConfirm(int? id)
+        {
+            if (id == null) return NotFound();
+            var studentId = _userManager.GetUserId(User);
+            var request = await _context.ServiceRequests
+                .Include(r => r.Student)
+                .FirstOrDefaultAsync(r => r.Id == id && r.StudentId == studentId);
+            if (request == null) return NotFound();
+
+            var viewModel = new ServiceRequestDetailViewModel
+            {
+                Id = request.Id,
+                RequestType = request.RequestType,
+                Description = request.Description,
+                Status = request.Status,
+                CreatedDate = request.CreatedDate,
+                UpdatedDate = request.UpdatedDate,
+                StudentName = request.Student?.FirstName + " " + request.Student?.LastName,
+                StudentEmail = request.Student?.Email ?? "",
+                StudentIdNumber = request.Student?.StudentId ?? "—"
+            };
             return View(viewModel);
         }
     }

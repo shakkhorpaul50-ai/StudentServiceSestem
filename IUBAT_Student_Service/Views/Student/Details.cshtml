@@ -43,8 +43,20 @@
                 </div>
             </div>
         </div>
-        <div class="mt-4">
+        <div class="mt-4 d-flex gap-2">
             <a asp-action="MyRequests" class="btn btn-outline-secondary" style="border-radius:8px;">← Back to My Requests</a>
+            @if (Model.Status == IUBAT_Student_Service.Models.RequestStatus.Pending)
+            {
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline;"
+                      onsubmit="return confirm('Are you sure you want to delete this request? This cannot be undone.');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger" style="border-radius:8px;">🗑️ Delete Request</button>
+                </form>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-danger" disabled title="Only pending requests can be deleted" style="border-radius:8px;">🗑️ Delete (only Pending)</button>
+            }
         </div>
     </div>
 </div>

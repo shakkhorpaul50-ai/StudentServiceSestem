@@ -21,6 +21,13 @@
                 </div>
 
                 <div class="mb-3">
+                    <label asp-for="StudentId" class="form-label"></label>
+                    <input asp-for="StudentId" class="form-control" placeholder="Enter your Student ID" />
+                    <span asp-validation-for="StudentId" class="text-danger small"></span>
+                    <div class="form-text" style="font-size:0.8rem;">Students: enter your Student ID. Staff: leave blank.</div>
+                </div>
+
+                <div class="mb-3">
                     <label asp-for="Password" class="form-label"></label>
                     <input asp-for="Password" class="form-control" placeholder="Enter password" />
                     <span asp-validation-for="Password" class="text-danger small"></span>

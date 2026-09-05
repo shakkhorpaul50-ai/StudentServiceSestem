@@ -27,6 +27,13 @@
                 </div>
 
                 <div class="mb-3">
+                    <label asp-for="StudentId" class="form-label"></label>
+                    <input asp-for="StudentId" class="form-control" placeholder="e.g. 22103042" />
+                    <span asp-validation-for="StudentId" class="text-danger small"></span>
+                    <div class="form-text" style="font-size:0.8rem;">Your unique Student ID (letters, numbers, hyphen only). No two students can share the same ID.</div>
+                </div>
+
+                <div class="mb-3">
                     <label asp-for="Email" class="form-label"></label>
                     <input asp-for="Email" class="form-control" placeholder="you@example.com" />
                     <span asp-validation-for="Email" class="text-danger small"></span>

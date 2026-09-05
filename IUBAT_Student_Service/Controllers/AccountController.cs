@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using IUBAT_Student_Service.Models;
 using IUBAT_Student_Service.Models.ViewModels;
 
@@ -28,6 +29,22 @@ namespace IUBAT_Student_Service.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            // Normalize StudentId
+            if (!string.IsNullOrWhiteSpace(model.StudentId))
+                model.StudentId = model.StudentId.Trim();
+
+            // Pre-check uniqueness for friendly error (DB also enforces unique filtered index)
+            if (ModelState.IsValid)
+            {
+                var trimmedId = model.StudentId.Trim();
+                var exists = await _userManager.Users.AnyAsync(u => u.StudentId != null && u.StudentId.ToLower() == trimmedId.ToLower());
+                if (exists)
+                {
+                    ModelState.AddModelError(nameof(model.StudentId), "This Student ID is already taken. Please use a different ID.");
+                    return View(model);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser
@@ -36,6 +53,7 @@ namespace IUBAT_Student_Service.Controllers
                     Email = model.Email,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
+                    StudentId = model.StudentId.Trim(),
                     EmailConfirmed = true
                 };
 
@@ -49,7 +67,11 @@ namespace IUBAT_Student_Service.Controllers
 
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    // Map duplicate StudentId DB error to friendly message
+                    if (error.Description.Contains("StudentId") || error.Description.Contains("IX_AspNetUsers_StudentId"))
+                        ModelState.AddModelError(nameof(model.StudentId), "This Student ID is already taken.");
+                    else
+                        ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
             return View(model);
@@ -68,15 +90,42 @@ namespace IUBAT_Student_Service.Controllers
         {
             ViewData["ReturnUrl"] = returnUrl;
 
+            if (!string.IsNullOrWhiteSpace(model.StudentId))
+                model.StudentId = model.StudentId.Trim();
+
             if (ModelState.IsValid)
             {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    var isStaff = await _userManager.IsInRoleAsync(user, "Staff");
+                    var isStudent = await _userManager.IsInRoleAsync(user, "Student");
+
+                    // Enforce StudentId check for Student accounts (ID supplied by student at login)
+                    if (isStudent && !string.IsNullOrWhiteSpace(user.StudentId))
+                    {
+                        if (string.IsNullOrWhiteSpace(model.StudentId))
+                        {
+                            ModelState.AddModelError(nameof(model.StudentId), "Student ID is required for student login.");
+                            return View(model);
+                        }
+
+                        if (!string.Equals(user.StudentId.Trim(), model.StudentId!.Trim(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            ModelState.AddModelError(nameof(model.StudentId), "Invalid Student ID.");
+                            return View(model);
+                        }
+                    }
+                    // If student has no StudentId yet (legacy), allow login without check
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(
                     model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
 
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (user != null && await _userManager.IsInRoleAsync(user, "Staff"))
+                    var loggedUser = await _userManager.FindByEmailAsync(model.Email);
+                    if (loggedUser != null && await _userManager.IsInRoleAsync(loggedUser, "Staff"))
                     {
                         return RedirectToAction("AllRequests", "Staff");
                     }

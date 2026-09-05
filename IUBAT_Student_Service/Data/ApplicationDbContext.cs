@@ -18,6 +18,15 @@ namespace IUBAT_Student_Service.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                // Unique filtered index: no two students can share the same StudentId
+                // Staff accounts have null StudentId and are excluded from uniqueness
+                entity.HasIndex(e => e.StudentId)
+                    .IsUnique()
+                    .HasFilter("\"StudentId\" IS NOT NULL");
+            });
+
             builder.Entity<ServiceRequest>(entity =>
             {
                 entity.HasKey(e => e.Id);
