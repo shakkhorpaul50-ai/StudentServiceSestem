@@ -21,10 +21,10 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="StudentId" class="form-label"></label>
+                    <label asp-for="StudentId" class="form-label">Student ID <span class="text-muted" style="font-weight:400;">(required for students)</span></label>
                     <input asp-for="StudentId" class="form-control" placeholder="Enter your Student ID" />
                     <span asp-validation-for="StudentId" class="text-danger small"></span>
-                    <div class="form-text" style="font-size:0.8rem;">Students: enter your Student ID. Staff: leave blank.</div>
+                    <div class="form-text" style="font-size:0.8rem;"><strong>Students:</strong> Student ID is required. <strong>Only staff</strong> can login without Student ID.</div>
                 </div>
 
                 <div class="mb-3">

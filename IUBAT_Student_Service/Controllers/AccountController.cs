@@ -101,22 +101,40 @@ namespace IUBAT_Student_Service.Controllers
                     var isStaff = await _userManager.IsInRoleAsync(user, "Staff");
                     var isStudent = await _userManager.IsInRoleAsync(user, "Student");
 
-                    // Enforce StudentId check for Student accounts (ID supplied by student at login)
-                    if (isStudent && !string.IsNullOrWhiteSpace(user.StudentId))
+                    // ONLY staff can login without Student ID. Students must always supply Student ID.
+                    if (isStudent)
                     {
                         if (string.IsNullOrWhiteSpace(model.StudentId))
                         {
-                            ModelState.AddModelError(nameof(model.StudentId), "Student ID is required for student login.");
+                            ModelState.AddModelError(nameof(model.StudentId), "Student ID is required for student login. Only staff can login without Student ID.");
                             return View(model);
                         }
 
-                        if (!string.Equals(user.StudentId.Trim(), model.StudentId!.Trim(), StringComparison.OrdinalIgnoreCase))
+                        // If student already has a stored StudentId, it must match
+                        if (!string.IsNullOrWhiteSpace(user.StudentId))
                         {
-                            ModelState.AddModelError(nameof(model.StudentId), "Invalid Student ID.");
-                            return View(model);
+                            if (!string.Equals(user.StudentId.Trim(), model.StudentId!.Trim(), StringComparison.OrdinalIgnoreCase))
+                            {
+                                ModelState.AddModelError(nameof(model.StudentId), "Invalid Student ID.");
+                                return View(model);
+                            }
+                        }
+                        else
+                        {
+                            // Legacy student without StudentId: allow first-time claim of ID at login, but must be unique
+                            var claimed = model.StudentId!.Trim();
+                            var duplicate = await _userManager.Users.AnyAsync(u => u.Id != user.Id && u.StudentId != null && u.StudentId.ToLower() == claimed.ToLower());
+                            if (duplicate)
+                            {
+                                ModelState.AddModelError(nameof(model.StudentId), "This Student ID is already taken. Please use a different ID.");
+                                return View(model);
+                            }
+                            // Persist the claimed ID for future logins (optional but keeps uniqueness)
+                            user.StudentId = claimed;
+                            await _userManager.UpdateAsync(user);
                         }
                     }
-                    // If student has no StudentId yet (legacy), allow login without check
+                    // Staff: explicitly allow empty StudentId — no validation even if they supply one
                 }
 
                 var result = await _signInManager.PasswordSignInAsync(
